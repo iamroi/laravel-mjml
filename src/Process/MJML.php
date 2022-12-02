@@ -2,7 +2,7 @@
 
 namespace Asahasrabuddhe\LaravelMJML\Process;
 
-use Html2Text\Html2Text;
+use Soundasleep\Html2Text;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\HtmlString;
 use Illuminate\View\View;
@@ -39,7 +39,7 @@ class MJML
             'path' => $this->view->getPath(),
             'data' => $this->view->getData(),
         ]));
-        $this->path = storage_path("framework/views/{$dataPathChecksum}.mjml.php");
+        $this->path = rtrim(config('view.compiled'), '/') . "/{$dataPathChecksum}.mjml.php";
     }
 
     /**
@@ -50,6 +50,7 @@ class MJML
     public function buildCmdLineFromConfig()
     {
         return implode(' ', [
+            'node',
             config('mjml.auto_detect_path') ? $this->detectBinaryPath() : config('mjml.path_to_binary'),
             $this->path,
             '-o',
@@ -71,7 +72,7 @@ class MJML
         File::put($this->path, $html);
 
         $contentChecksum    = hash('sha256', $html);
-        $this->compiledPath = storage_path("framework/views/{$contentChecksum}.php");
+        $this->compiledPath = rtrim(config('view.compiled'), '/') . "/{$contentChecksum}.php";
 
         if (! File::exists($this->compiledPath)) {
             $this->process = Process::fromShellCommandline($this->buildCmdLineFromConfig());
